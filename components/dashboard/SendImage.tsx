@@ -5,7 +5,7 @@ import { usePrinter } from '@/hooks/usePrinter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { processImageForPrinter } from '@/lib/printer';
-import { RotateCw, X, Maximize2, Minimize2 } from 'lucide-react';
+import { RotateCw, X, Maximize2, Minimize2, Sun, FlipHorizontal, FlipVertical, FlipHorizontal2 } from 'lucide-react';
 
 const PRINTER_WIDTH = 384;
 
@@ -17,10 +17,12 @@ export default function SendImage() {
   const [imageDimensions, setImageDimensions] = useState<{ width: number; height: number } | null>(null);
   const [coverMode, setCoverMode] = useState(false);
   const [coverHeight, setCoverHeight] = useState<number>(500); // Default height for cover mode
+  const [brightness, setBrightness] = useState<number>(128); // Brightness: 0-255, default 128
+  const [flip, setFlip] = useState<'none' | 'h' | 'v' | 'both'>('none'); // Flip/flop: none, horizontal, vertical, both
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { print, isPrinting, isConnected } = usePrinter();
 
-  // Update preview when rotation or cover mode changes
+  // Update preview when rotation, cover mode, brightness, or flip changes
   useEffect(() => {
     if (!originalImageData) return;
     
@@ -93,8 +95,57 @@ export default function SendImage() {
     
     ctx.restore();
 
+    // Apply flip/flop transformation
+    if (flip !== 'none') {
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const flippedData = ctx.createImageData(canvas.width, canvas.height);
+      const data = imageData.data;
+      const flipped = flippedData.data;
+      
+      for (let y = 0; y < canvas.height; y++) {
+        for (let x = 0; x < canvas.width; x++) {
+          const srcX = flip === 'h' || flip === 'both' ? canvas.width - 1 - x : x;
+          const srcY = flip === 'v' || flip === 'both' ? canvas.height - 1 - y : y;
+          
+          const srcIdx = (srcY * canvas.width + srcX) * 4;
+          const dstIdx = (y * canvas.width + x) * 4;
+          
+          flipped[dstIdx] = data[srcIdx];
+          flipped[dstIdx + 1] = data[srcIdx + 1];
+          flipped[dstIdx + 2] = data[srcIdx + 2];
+          flipped[dstIdx + 3] = data[srcIdx + 3];
+        }
+      }
+      ctx.putImageData(flippedData, 0, 0);
+    }
+
+    // Apply brightness adjustment for preview
+    if (brightness !== 128) {
+      let processedImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = processedImageData.data;
+      for (let i = 0; i < data.length; i += 4) {
+        // Get RGB values
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        
+        // Convert to grayscale
+        const gray = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
+        
+        // Apply brightness adjustment
+        const brightnessFactor = (brightness - 128) / 128;
+        const adjustedGray = Math.max(0, Math.min(255, gray + brightnessFactor * 64));
+        
+        // Set RGB to adjusted grayscale value
+        data[i] = adjustedGray;
+        data[i + 1] = adjustedGray;
+        data[i + 2] = adjustedGray;
+      }
+      ctx.putImageData(processedImageData, 0, 0);
+    }
+
     setPreview(canvas.toDataURL());
-  }, [rotation, originalImageData, coverMode, coverHeight, originalImage]);
+  }, [rotation, originalImageData, coverMode, coverHeight, originalImage, brightness, flip]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -134,6 +185,8 @@ export default function SendImage() {
         const data = ctx.getImageData(0, 0, width, height);
         setOriginalImageData(data);
         setRotation(0); // Reset rotation when new image is loaded
+        setBrightness(128); // Reset brightness
+        setFlip('none'); // Reset flip
         setImageDimensions({ width, height }); // Set initial dimensions
       };
       img.src = event.target?.result as string;
@@ -153,12 +206,21 @@ export default function SendImage() {
     setOriginalImageData(null);
     setOriginalImage(null);
     setRotation(0);
+    setBrightness(128);
+    setFlip('none');
     setImageDimensions(null);
     setCoverMode(false);
     // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+  };
+
+  const handleFlip = () => {
+    const flips: ('none' | 'h' | 'v' | 'both')[] = ['none', 'h', 'v', 'both'];
+    const currentIndex = flips.indexOf(flip);
+    const newIndex = (currentIndex + 1) % flips.length;
+    setFlip(flips[newIndex] as 'none' | 'h' | 'v' | 'both');
   };
 
   const handleToggleCover = () => {
@@ -239,11 +301,12 @@ export default function SendImage() {
       const imageDataToPrint = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
       // Process for printer (rotation is already applied, so set to 0)
+      // Flip will be applied during processing
       const processed = processImageForPrinter(imageDataToPrint, {
         dither: 'steinberg',
         rotate: 0, // Rotation already applied in canvas
-        flip: 'none',
-        brightness: 128,
+        flip: flip, // Apply flip/flop transformation
+        brightness: brightness,
       });
 
       // Convert processed data to Uint8ClampedArray for printing
@@ -287,10 +350,20 @@ export default function SendImage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium text-foreground">Preview</p>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">
-                    {rotation}°
-                  </span>
+                <div className="flex items-center gap-1">
+                  <Button
+                    onClick={handleFlip}
+                    variant={flip !== 'none' ? "default" : "ghost"}
+                    size="sm"
+                    className="h-7 w-7 p-0"
+                    title={`Flip: ${flip === 'none' ? 'None' : flip === 'h' ? 'Horizontal' : flip === 'v' ? 'Vertical' : 'Both'}`}
+                  >
+                    {flip === 'v' || flip === 'both' ? (
+                      <FlipVertical className="h-4 w-4" />
+                    ) : (
+                      <FlipHorizontal className="h-4 w-4" />
+                    )}
+                  </Button>
                   <Button
                     onClick={handleToggleCover}
                     variant={coverMode ? "default" : "ghost"}
@@ -413,24 +486,51 @@ export default function SendImage() {
               </div>
             </div>
 
-            {/* Cover Mode Height Control */}
-            {coverMode && (
+            {/* Image Adjustments */}
+            <div className="space-y-4">
+              {/* Brightness Control */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Cover Height</label>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                    <Sun className="h-4 w-4" />
+                    Brightness
+                  </label>
+                  <span className="text-xs text-muted-foreground">{brightness}</span>
+                </div>
                 <input
-                  type="number"
-                  value={coverHeight}
-                  onChange={(e) => setCoverHeight(Math.max(100, Math.min(2000, Number(e.target.value))))}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  min="100"
-                  max="2000"
-                  step="50"
+                  type="range"
+                  min="0"
+                  max="255"
+                  value={brightness}
+                  onChange={(e) => setBrightness(Number(e.target.value))}
+                  className="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
                 />
-                <p className="text-xs text-muted-foreground">
-                  Image will fill {PRINTER_WIDTH} × {coverHeight}px area
-                </p>
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Dark</span>
+                  <span>Normal</span>
+                  <span>Bright</span>
+                </div>
               </div>
-            )}
+
+              {/* Cover Mode Height Control */}
+              {coverMode && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">Cover Height</label>
+                  <input
+                    type="number"
+                    value={coverHeight}
+                    onChange={(e) => setCoverHeight(Math.max(100, Math.min(2000, Number(e.target.value))))}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    min="100"
+                    max="2000"
+                    step="50"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Image will fill {PRINTER_WIDTH} × {coverHeight}px area
+                  </p>
+                </div>
+              )}
+            </div>
 
             {/* Print Button */}
             <Button
