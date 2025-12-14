@@ -2,13 +2,13 @@
 
 An offline-first Next.js Progressive Web Application for thermal Bluetooth printer management.
 
-**Repository**: [https://github.com/gurkanfikretgunak/masterfabric-termal-printer](https://github.com/gurkanfikretgunak/masterfabric-termal-printer)
+**Repository**: [https://github.com/gurkanfikretgunak/masterfabric-thermal-printer](https://github.com/gurkanfikretgunak/masterfabric-thermal-printer)
 
 ## Features
 
 - 🖨️ **Bluetooth Printing** - Direct connection to MXW01 thermal printers via Web Bluetooth
 - 📱 **PWA Support** - Installable on mobile/desktop, works offline
-- 🎨 **Modern UI** - Built with Next.js 14, shadcn/ui, and Tailwind CSS
+- 🎨 **Modern UI** - Built with Next.js 16, React 19, shadcn/ui, and Tailwind CSS
 - 💾 **Offline-First** - All data stored locally in IndexedDB
 - 🏷️ **Badge Designer** - Visual badge design tool with drag-and-drop elements
 - 📄 **Template System** - Save and reuse print templates
@@ -20,7 +20,7 @@ An offline-first Next.js Progressive Web Application for thermal Bluetooth print
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+ (Node.js 20+ recommended) 
 - npm or yarn
 - Chrome/Edge browser (for Web Bluetooth support)
 
@@ -77,7 +77,8 @@ npm run dev
 
 ## Technology Stack
 
-- **Next.js 14** - React framework with App Router
+- **Next.js 16** - React framework with App Router
+- **React 19** - Latest React with improved performance
 - **TypeScript** - Type safety
 - **Tailwind CSS** - Styling
 - **shadcn/ui** - UI components

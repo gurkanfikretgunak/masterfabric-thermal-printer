@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://github.com/gurkanfikretgunak/masterfabric-termal-printer'
+  const baseUrl = 'https://github.com/gurkanfikretgunak/masterfabric-thermal-printer'
   
   return [
     {

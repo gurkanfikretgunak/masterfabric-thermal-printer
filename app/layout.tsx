@@ -31,14 +31,14 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL("https://github.com/gurkanfikretgunak/masterfabric-termal-printer"),
+  metadataBase: new URL("https://github.com/gurkanfikretgunak/masterfabric-thermal-printer"),
   alternates: {
     canonical: "/",
   },
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://github.com/gurkanfikretgunak/masterfabric-termal-printer",
+    url: "https://github.com/gurkanfikretgunak/masterfabric-thermal-printer",
     title: "MasterFabric Printer - Thermal Printer Manager",
     description: "Offline-first Progressive Web Application for managing thermal Bluetooth printers",
     siteName: "MasterFabric Printer",

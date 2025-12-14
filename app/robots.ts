@@ -9,7 +9,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/api/', '/_next/'],
       },
     ],
-    sitemap: 'https://github.com/gurkanfikretgunak/masterfabric-termal-printer/sitemap.xml',
+    sitemap: 'https://github.com/gurkanfikretgunak/masterfabric-thermal-printer/sitemap.xml',
   }
 }
 

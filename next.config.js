@@ -3,11 +3,6 @@ const nextConfig = {
   reactStrictMode: true,
   // PWA configuration
   // For now, ensure client-side rendering for Bluetooth API
-  experimental: {
-    serverActions: {
-      bodySizeLimit: '2mb',
-    },
-  },
   // SEO and performance optimizations
   compress: true,
   poweredByHeader: false,

@@ -2,7 +2,7 @@
 
 export default function SplashFooter() {
   // These would ideally come from environment variables or build-time data
-  const repoUrl = 'https://github.com/gurkanfikretgunak/masterfabric-termal-printer';
+  const repoUrl = 'https://github.com/gurkanfikretgunak/masterfabric-thermal-printer';
   const authorName = 'gurkanfikretgunak';
   const authorUrl = `https://github.com/${authorName}`;
   const commitHash = process.env.NEXT_PUBLIC_COMMIT_HASH || 'main';

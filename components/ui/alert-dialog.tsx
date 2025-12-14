@@ -41,11 +41,11 @@ const AlertDialogTrigger = React.forwardRef<
   }
 >(({ className, asChild, children, ...props }, ref) => {
   if (asChild && React.isValidElement(children)) {
-    return React.cloneElement(children as React.ReactElement, {
-      ref,
+    return React.cloneElement(children as React.ReactElement<any>, {
+      ref: ref as any,
       className: cn(className),
       ...props,
-    });
+    } as any);
   }
   return (
     <button ref={ref} className={cn(className)} {...props}>
