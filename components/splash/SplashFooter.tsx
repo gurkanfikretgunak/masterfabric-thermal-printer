@@ -3,6 +3,7 @@
 import { Badge } from '@/components/ui/badge';
 import { WifiOff, GitCommit, Calendar, User, Database, Shield, CloudOff } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 interface CommitInfo {
   hash: string;
@@ -20,6 +21,8 @@ export default function SplashFooter() {
   
   const [commitInfo, setCommitInfo] = useState<CommitInfo | null>(null);
   const [commitsHistory, setCommitsHistory] = useState<CommitInfo[]>([]);
+  const [commitDialogOpen, setCommitDialogOpen] = useState(false);
+  const [offlineDialogOpen, setOfflineDialogOpen] = useState(false);
   
   useEffect(() => {
     // Try to get commit info from environment variable first (set at build time)
@@ -105,89 +108,86 @@ export default function SplashFooter() {
   return (
     <div className="w-full max-w-md border-t border-border pt-4 pb-2">
       <div className="flex items-center justify-center flex-wrap gap-x-2 gap-y-1 text-xs text-muted-foreground">
-        {/* Commit Hash with GitHub-styled Card - First */}
+        {/* Commit Hash with Dialog */}
         {commitInfo && (
           <>
-          <div className="relative group inline-flex items-center">
-            <a
-              href={commitInfo.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-foreground transition-colors font-mono flex items-center gap-1"
-              title={`Commit: ${commitInfo.shortHash}\n${commitInfo.message}\nAuthor: ${commitInfo.author}`}
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                setCommitDialogOpen(true);
+              }}
+              className="hover:text-foreground transition-colors font-mono flex items-center gap-1 cursor-pointer bg-transparent border-none p-0 text-xs text-muted-foreground"
             >
               <GitCommit className="h-3 w-3" />
               {commitInfo.shortHash}
-            </a>
-            {/* GitHub-styled Commit Card - Shown on hover */}
-            <div className="hidden sm:block absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-96 opacity-0 group-hover:opacity-100 hover:opacity-100 pointer-events-none group-hover:pointer-events-auto hover:pointer-events-auto transition-opacity duration-200 z-50">
-              {/* Invisible bridge to prevent hover gap */}
-              <div className="absolute top-full left-0 right-0 h-4 -mb-4"></div>
-              <div className="bg-white border border-gray-300 rounded-lg shadow-2xl overflow-hidden">
-                {/* Card Header */}
-                <div className="bg-gray-50 border-b border-gray-200 px-4 py-2.5">
-                  <div className="flex items-center gap-2">
-                    <GitCommit className="h-3.5 w-3.5 text-gray-500" />
-                    <span className="text-xs font-semibold text-gray-900">Recent Commits</span>
-                    <span className="ml-auto text-xs text-gray-500">
+            </button>
+            
+            {/* Commit History Dialog */}
+            <AlertDialog open={commitDialogOpen} onOpenChange={setCommitDialogOpen}>
+              <AlertDialogContent className="sm:max-w-md max-h-[80vh] overflow-hidden flex flex-col">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="flex items-center gap-2">
+                    <GitCommit className="h-4 w-4" />
+                    Recent Commits
+                    <span className="ml-auto text-xs font-normal text-muted-foreground">
                       {commitsHistory.length > 0 ? `${commitsHistory.length} commits` : ''}
                     </span>
-                  </div>
-                </div>
+                  </AlertDialogTitle>
+                </AlertDialogHeader>
                 
-                {/* Card Body - Commits List */}
-                <div className="px-4 py-3 space-y-0 bg-white max-h-96 overflow-y-auto">
+                {/* Commits List */}
+                <div className="px-0 py-3 space-y-0 overflow-y-auto flex-1">
                   {commitsHistory.length > 0 ? (
                     commitsHistory.map((commit, index) => (
                       <div
                         key={commit.hash}
-                        className={`py-2.5 ${index !== commitsHistory.length - 1 ? 'border-b border-gray-100' : ''}`}
+                        className={`px-4 py-2.5 ${index !== commitsHistory.length - 1 ? 'border-b border-border' : ''}`}
                       >
                         <a
                           href={commit.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="block group/item hover:bg-gray-50 -mx-2 px-2 rounded transition-colors pointer-events-auto"
+                          className="block group/item hover:bg-accent -mx-2 px-2 rounded transition-colors"
                           onClick={(e) => e.stopPropagation()}
                         >
                           {/* Commit Hash and Message */}
                           <div className="flex items-start gap-2 mb-1.5">
-                            <span className="text-xs font-mono text-blue-600 group-hover/item:text-blue-800 group-hover/item:underline flex-shrink-0">
+                            <span className="text-xs font-mono text-primary group-hover/item:underline flex-shrink-0">
                               {commit.shortHash}
                             </span>
-                            <p className="text-sm text-gray-900 leading-relaxed break-words flex-1">
+                            <p className="text-sm text-foreground leading-relaxed break-words flex-1">
                               {commit.message}
                             </p>
                           </div>
                           
                           {/* Commit Details */}
                           <div className="flex flex-wrap items-center gap-3 mt-1.5">
-                            <div className="flex items-center gap-1.5 text-xs text-gray-600">
-                              <User className="h-3 w-3 text-gray-500" />
-                              <span className="font-medium text-gray-700">{commit.author}</span>
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                              <User className="h-3 w-3" />
+                              <span className="font-medium">{commit.author}</span>
                             </div>
-                            <div className="flex items-center gap-1.5 text-xs text-gray-600">
-                              <Calendar className="h-3 w-3 text-gray-500" />
-                              <span className="text-gray-600">{formatDate(commit.date)}</span>
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                              <Calendar className="h-3 w-3" />
+                              <span>{formatDate(commit.date)}</span>
                             </div>
                           </div>
                         </a>
                       </div>
                     ))
                   ) : (
-                    <div className="py-2">
-                      <p className="text-sm text-gray-500">No commit history available</p>
+                    <div className="py-2 px-4">
+                      <p className="text-sm text-muted-foreground">No commit history available</p>
                     </div>
                   )}
                 </div>
                 
-                {/* Card Footer */}
-                <div className="bg-gray-50 border-t border-gray-200 px-4 py-2">
+                {/* Dialog Footer */}
+                <div className="border-t border-border pt-3 mt-2">
                   <a
                     href={`${repoUrl}/commits/main`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs text-blue-600 hover:text-blue-800 hover:underline font-medium inline-flex items-center gap-1 pointer-events-auto"
+                    className="text-xs text-primary hover:underline font-medium inline-flex items-center gap-1"
                     onClick={(e) => e.stopPropagation()}
                   >
                     View all commits on GitHub
@@ -196,14 +196,8 @@ export default function SplashFooter() {
                     </svg>
                   </a>
                 </div>
-              </div>
-              {/* Arrow pointing to commit hash */}
-              <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1">
-                <div className="border-8 border-transparent border-t-gray-300"></div>
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 -mt-1 border-8 border-transparent border-t-white"></div>
-              </div>
-            </div>
-          </div>
+              </AlertDialogContent>
+            </AlertDialog>
           </>
         )}
         {commitInfo && <span>•</span>}
@@ -225,69 +219,60 @@ export default function SplashFooter() {
           {authorName}
         </a>
         <span>•</span>
-        {/* Offline Badge with GitHub-styled Card */}
-        <div className="relative group inline-flex items-center">
-          <Badge 
-            variant="outline" 
-            className="cursor-help flex items-center gap-1.5 hover:bg-accent transition-colors"
-            title="This is a fully offline project. It does not connect to any external services, APIs, or servers. All data is stored locally on your device."
-          >
-            <WifiOff className="h-3 w-3" />
-            <span>Offline</span>
-          </Badge>
-          {/* GitHub-styled Offline Card - Shown on hover */}
-          <div className="hidden sm:block absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-80 opacity-0 group-hover:opacity-100 hover:opacity-100 pointer-events-none group-hover:pointer-events-auto hover:pointer-events-auto transition-opacity duration-200 z-50">
-            {/* Invisible bridge to prevent hover gap */}
-            <div className="absolute top-full left-0 right-0 h-4 -mb-4"></div>
-            <div className="bg-white border border-gray-300 rounded-lg shadow-2xl overflow-hidden">
-              {/* Card Header */}
-              <div className="bg-gray-50 border-b border-gray-200 px-4 py-2.5">
-                <div className="flex items-center gap-2">
-                  <CloudOff className="h-3.5 w-3.5 text-gray-500" />
-                  <span className="text-xs font-semibold text-gray-900">Offline Project</span>
-                </div>
-              </div>
-              
-              {/* Card Body */}
-              <div className="px-4 py-3 space-y-3 bg-white">
-                {/* Main Description */}
-                <div>
-                  <p className="text-sm text-gray-900 leading-relaxed">
-                    This is a fully offline project. It does not connect to any external services, APIs, or servers.
-                  </p>
-                </div>
-                
-                {/* Features List */}
-                <div className="space-y-2 pt-2 border-t border-gray-200">
-                  <div className="flex items-start gap-2 text-xs text-gray-700">
-                    <Database className="h-3.5 w-3.5 text-gray-500 mt-0.5 flex-shrink-0" />
-                    <span>All data is stored locally on your device using IndexedDB</span>
-                  </div>
-                  <div className="flex items-start gap-2 text-xs text-gray-700">
-                    <Shield className="h-3.5 w-3.5 text-gray-500 mt-0.5 flex-shrink-0" />
-                    <span>No network requests or external API calls</span>
-                  </div>
-                  <div className="flex items-start gap-2 text-xs text-gray-700">
-                    <WifiOff className="h-3.5 w-3.5 text-gray-500 mt-0.5 flex-shrink-0" />
-                    <span>Works completely offline without internet connection</span>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Card Footer */}
-              <div className="bg-gray-50 border-t border-gray-200 px-4 py-2">
-                <p className="text-xs text-gray-600">
-                  <span className="font-medium text-gray-700">Privacy First:</span> Your data never leaves your device
+        {/* Offline Badge with Dialog */}
+        <Badge 
+          variant="outline" 
+          className="cursor-pointer flex items-center gap-1.5 hover:bg-accent transition-colors"
+          onClick={() => setOfflineDialogOpen(true)}
+        >
+          <WifiOff className="h-3 w-3" />
+          <span>Offline</span>
+        </Badge>
+        
+        {/* Offline Info Dialog */}
+        <AlertDialog open={offlineDialogOpen} onOpenChange={setOfflineDialogOpen}>
+          <AlertDialogContent className="sm:max-w-md">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <CloudOff className="h-4 w-4" />
+                Offline Project
+              </AlertDialogTitle>
+            </AlertDialogHeader>
+            
+            {/* Dialog Body */}
+            <div className="space-y-4 py-2">
+              {/* Main Description */}
+              <div>
+                <p className="text-sm text-foreground leading-relaxed">
+                  This is a fully offline project. It does not connect to any external services, APIs, or servers.
                 </p>
               </div>
+              
+              {/* Features List */}
+              <div className="space-y-3 pt-2 border-t border-border">
+                <div className="flex items-start gap-2 text-sm text-foreground">
+                  <Database className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                  <span>All data is stored locally on your device using IndexedDB</span>
+                </div>
+                <div className="flex items-start gap-2 text-sm text-foreground">
+                  <Shield className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                  <span>No network requests or external API calls</span>
+                </div>
+                <div className="flex items-start gap-2 text-sm text-foreground">
+                  <WifiOff className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                  <span>Works completely offline without internet connection</span>
+                </div>
+              </div>
             </div>
-            {/* Arrow pointing to offline badge */}
-            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1">
-              <div className="border-8 border-transparent border-t-gray-300"></div>
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 -mt-1 border-8 border-transparent border-t-white"></div>
+            
+            {/* Dialog Footer */}
+            <div className="border-t border-border pt-3 mt-2">
+              <p className="text-xs text-muted-foreground">
+                <span className="font-medium text-foreground">Privacy First:</span> Your data never leaves your device
+              </p>
             </div>
-          </div>
-        </div>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

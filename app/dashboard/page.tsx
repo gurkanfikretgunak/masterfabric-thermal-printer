@@ -11,10 +11,11 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import PrinterTabs from '@/components/dashboard/PrinterTabs';
 import SplashFooter from '@/components/splash/SplashFooter';
 import { CheckCircle2, XCircle, AlertCircle, Wifi } from 'lucide-react';
+import PrintingDialog from '@/components/dashboard/PrintingDialog';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { isConnected, statusMessage, printerState, disconnect } = usePrinter();
+  const { isConnected, statusMessage, printerState, disconnect, isPrinting, error } = usePrinter();
   const [activeTab, setActiveTab] = useState('text');
 
   useEffect(() => {
@@ -147,6 +148,9 @@ export default function DashboardPage() {
       <div className="w-full max-w-md mx-auto pt-4 pb-2 mt-auto">
         <SplashFooter />
       </div>
+
+      {/* Printing Dialog */}
+      <PrintingDialog isPrinting={isPrinting} statusMessage={statusMessage} error={error} />
     </MobileContainer>
   );
 }
