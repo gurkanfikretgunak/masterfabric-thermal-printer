@@ -5,7 +5,7 @@ import { usePrinter } from '@/hooks/usePrinter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { processImageForPrinter } from '@/lib/printer';
-import { RotateCw, X, Maximize2, Minimize2, Sun, FlipHorizontal, FlipVertical, FlipHorizontal2 } from 'lucide-react';
+import { RotateCw, X, Maximize2, Minimize2, Sun, FlipHorizontal, FlipVertical } from 'lucide-react';
 
 const PRINTER_WIDTH = 384;
 

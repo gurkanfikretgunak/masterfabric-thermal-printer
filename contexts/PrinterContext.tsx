@@ -8,8 +8,7 @@ import {
 import type { 
   PrinterState, 
   PrinterImageData, 
-  PrintOptions,
-  DitherMethod 
+  PrintOptions
 } from '@/lib/printer';
 
 interface PrinterContextValue {
@@ -23,14 +22,8 @@ interface PrinterContextValue {
   
   // Actions
   connect: () => Promise<void>;
-  reconnect: (deviceId?: string) => Promise<boolean>;
   disconnect: () => Promise<void>;
   print: (imageData: PrinterImageData, options?: PrintOptions) => Promise<void>;
-  getStatus: () => Promise<PrinterState | null>;
-  
-  // Settings
-  setDitherMethod: (method: DitherMethod) => void;
-  setPrintIntensity: (intensity: number) => void;
 }
 
 const PrinterContext = createContext<PrinterContextValue | undefined>(undefined);
@@ -104,28 +97,6 @@ export function PrinterProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const reconnect = useCallback(async (deviceId?: string) => {
-    if (!clientRef.current) return false;
-    
-    setIsConnecting(true);
-    setError(null);
-    setStatusMessage('Reconnecting...');
-    
-    try {
-      const success = await clientRef.current.reconnect(deviceId);
-      if (!success) {
-        setIsConnecting(false);
-        setStatusMessage('Reconnection failed');
-      }
-      return success;
-    } catch (err) {
-      setIsConnecting(false);
-      const errorMessage = err instanceof Error ? err.message : 'Reconnection failed';
-      setError(errorMessage);
-      setStatusMessage('Reconnection failed');
-      return false;
-    }
-  }, []);
 
   const disconnect = useCallback(async () => {
     if (!clientRef.current) return;
@@ -155,23 +126,6 @@ export function PrinterProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const getStatus = useCallback(async () => {
-    if (!clientRef.current) return null;
-    try {
-      return await clientRef.current.getStatus();
-    } catch (err) {
-      console.error('Error getting status:', err);
-      return null;
-    }
-  }, []);
-
-  const setDitherMethod = useCallback((method: DitherMethod) => {
-    clientRef.current?.setDitherMethod(method);
-  }, []);
-
-  const setPrintIntensity = useCallback((intensity: number) => {
-    clientRef.current?.setPrintIntensity(intensity);
-  }, []);
 
   const value: PrinterContextValue = {
     isConnected,
@@ -181,12 +135,8 @@ export function PrinterProvider({ children }: { children: React.ReactNode }) {
     printerState,
     error,
     connect,
-    reconnect,
     disconnect,
     print,
-    getStatus,
-    setDitherMethod,
-    setPrintIntensity,
   };
 
   return (
